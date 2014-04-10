@@ -175,6 +175,11 @@ gMinusVisitor       = 103
 
 WebLaunchCmd = None
 
+#=================================================================================================
+# Dirt Startup Variables
+# These variables should be changed based on your setup and how you configure your server to setup the DirtDescent age.
+kDIRTDescentInstanceName = "D'ni-Tiwah"
+kDIRTDescentGUID = "8468404b-6880-4e7a-b3f2-b1b8e1077263"
 #====================================
 
 class xDialogStartUp(ptResponder):
@@ -542,7 +547,8 @@ class xDialogStartUp(ptResponder):
         if playerInt == 0:
             return
         
-        if opType == PtAccountUpdateType.kActivePlayer:
+
+        if (opType == PtAccountUpdateType.kActivePlayer):
             print "Active player set."
 
             pythonBox = PtFindSceneobject("OptionsDialog", "GUI")
@@ -554,18 +560,32 @@ class xDialogStartUp(ptResponder):
                 notify.setActivate(1.0)
                 notify.send()
 
-            # setup the link to player's Relto
+            #Setup the link to the next age
             self.ageLink = ptAgeLinkStruct()
             ageInfo = ptAgeInfoStruct()
 
             vault = ptVault()
             entry = vault.findChronicleEntry("InitialAvCustomizationsDone")
             if type(entry) != type(None):
-                ageInfo.setAgeFilename("Personal")
+                crsEntry = vault.findChronicleEntry("CRSExplorer")
+                clftSolved = vault.findChronicleEntry("CleftSolved")
+                if type(crsEntry) != type(None):
+                    ageInfo.setAgeFilename("DniHouse")
+                    self.ageLink.setLinkingRules(PtLinkingRules.kOwnedBook)
+                elif type(clftSolved) != type(None):
+                    ageInfo.setAgeFilename("Personal")
+                    self.ageLink.setLinkingRules(PtLinkingRules.kOwnedBook)
+                else:
+                    print"xDialogStartUp.OnAccountUpdate: Player hasn't chosen a path yet so they have to go back to Descent and do so"
+                    ageInfo.setAgeFilename("DirtDescent")
+                    ageInfo.setAgeInstanceName(kDIRTDescentInstanceName)
+                    ageInfo.setAgeInstanceGuid(kDIRTDescentGUID)
+                    self.ageLink.setLinkingRules(PtLinkingRules.kBasicLink)
             else:
                 ageInfo.setAgeFilename("AvatarCustomization")
+                self.ageLink.setLinkingRules(PtLinkingRules.kOwnedBook)
             self.ageLink.setAgeInfo(ageInfo)
-            self.ageLink.setLinkingRules(PtLinkingRules.kOwnedBook)
+
 
             print "Linking to %s" % (self.ageLink.getAgeInfo().getAgeFilename())
             respLinkOutSND.run(self.key)

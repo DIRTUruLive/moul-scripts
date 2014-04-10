@@ -89,6 +89,12 @@ kAvaCustaIsDone = "InitialAvCustomizationsDone"
 kAvaCustaIsDoneType = 0
 kCleftSolved = "CleftSolved"
 
+# Dirt Startup Variables
+# These variables should be changed based on your setup and how you configure your server to setup the DirtDescent age.
+kDIRTDescentInstanceName = "D'ni-Tiwah"
+kDIRTDescentGUID = "8468404b-6880-4e7a-b3f2-b1b8e1077263"
+kInitialExploration = "InitialExplorationDone"
+kCRSExplorer = "CRSExplorer"
 # ==============
 # AVCustGUI globals
 #----Controls
@@ -906,84 +912,90 @@ class xAvatarCustomization(ptModifier):
                         PtEnableAvatarJump()
                         if InAvatarCloset:
                             vault = ptVault()
-                            entry = vault.findChronicleEntry(kCleftSolved)
+                            dsntEntry = vault.findChronicleEntry(kInitialExploration)
                             linkmgr = ptNetLinkingMgr()
 
                             #Just link back to the closet
-                            self.ILinkToCloset()
+                            #self.ILinkToCloset()
 
-                            #Disable other logic... no more going to the cleft from the AVC
-                            #~if type(entry) != type(None):
-                                # player has solved the cleft
-                                # just go back to your personal age
-                            #~        self.ILinkToCloset()
-                            #~else:
-                                # player has not solved the cleft, link them to it
-                            #~    ageLink = ptAgeLinkStruct()
-                            #~    ageInfo = ageLink.getAgeInfo()
-                            #~    temp = ptAgeInfoStruct()
-                            #~    temp.copyFrom(ageInfo)
-                            #~    ageInfo = temp
-                            #~    if PtIsDemoMode():
-                            #~        ageInfo.setAgeFilename("Demo")
-                            #~    else:
-                            #~        ageInfo.setAgeFilename("Cleft")
-                            #~    ageInfo.setAgeInstanceName("D'ni-Riltagamin")
-                            #~    ageLink.setAgeInfo(ageInfo)
-                            #~    ageLink.setLinkingRules(PtLinkingRules.kOriginalBook)
-                            #~    linkmgr.linkToAge(ageLink)
-                            
+                            #renable other logic... we want to do some weird traveling for DIRT
+                            if type(dsntEntry) != type(None):
+                                 #player has solved the cleft
+                                 #So now we're linking to our home age
+                                self.ILinkToCloset()
+                            else:
+                                #first we'll save the clothing to disk:
+                                avatar.avatar.saveClothingToFile(str(PtGetLocalPlayer().getPlayerID()) + ".clo")
+                                # We also know theplayer has not finished the exploration of DIRTDescent and chosen a path
+                                ageLink = ptAgeLinkStruct()
+                                ageInfo = ageLink.getAgeInfo()
+                                temp = ptAgeInfoStruct()
+                                temp.copyFrom(ageInfo)
+                                ageInfo = temp
+                                ageInfo.setAgeFilename("DirtDescent")
+                                ageInfo.setAgeInstanceName(kDIRTDescentInstanceName)
+                                ageInfo.setAgeInstanceGuid(kDIRTDescentGUID)
+                                ageLink.setAgeInfo(ageInfo)
+                                ageLink.setLinkingRules(PtLinkingRules.kBasicLink)
+                                linkmgr.linkToAge(ageLink)
+
                         else:
                             # mark the chonicle that we've been here
                             vault = ptVault()
                             vault.addChronicleEntry(kAvaCustaIsDone,kAvaCustaIsDoneType,"1")
-                            entry = vault.findChronicleEntry(kCleftSolved)
-                            
-                            #Link straight to personal, no more going to cleft from the AVC!
-                            linkmgr = ptNetLinkingMgr()
-                            ageLink = ptAgeLinkStruct()
-                            ageInfo = ageLink.getAgeInfo()
-                            temp = ptAgeInfoStruct()
-                            temp.copyFrom(ageInfo)
-                            ageInfo = temp
-                            ageInfo.setAgeFilename("Personal")
-                            ageLink.setAgeInfo(ageInfo)
-                            ageLink.setLinkingRules(PtLinkingRules.kOwnedBook)
-                            linkmgr.linkToAge(ageLink)
-                            
-                            #Disable other logic... no more going to cleft from the AVC!
-                            #~if type(entry) != type(None):
-                                # player has solved the cleft
-                                # just go back to your personal age
-                            #~    linkmgr = ptNetLinkingMgr()
-                            #~    ageLink = ptAgeLinkStruct()
-                                
-                            #~    ageInfo = ageLink.getAgeInfo()
-                            #~    temp = ptAgeInfoStruct()
-                            #~    temp.copyFrom(ageInfo)
-                            #~    ageInfo = temp
-                            #~    ageInfo.setAgeFilename("Personal")
-                            #~    ageLink.setAgeInfo(ageInfo)
-                            #~    ageLink.setLinkingRules(PtLinkingRules.kOriginalBook)
-                            #~    linkmgr.linkToAge(ageLink)
-                            
-                            #~else:
+                            dsntEntry = vault.findChronicleEntry(kInitialExploration)
+
+                            #renable other logic... and let's do some linking magic for DIRT
+                            if type(dsntEntry) != type(None):
+                                #first we'll save the clothing:
+                                avatar.avatar.saveClothingToFile(str(PtGetLocalPlayer().getPlayerID()) + ".clo")
+                                # then since the player has finished exploring DIRTDescent and chosen a path we now see where they go
+                                linkmgr = ptNetLinkingMgr()
+                                ageLink = ptAgeLinkStruct()
+                                ageInfo = ageLink.getAgeInfo()
+                                temp = ptAgeInfoStruct()
+                                temp.copyFrom(ageInfo)
+                                ageInfo = temp
+                                clftEntry = vault.findChronicleEntry(kCleftSolved)
+                                crsEntry = vault.findChronicleEntry(kCRSExplorer)
+                                if type(clftEntry) != type (None):
+                                    # they've chosen to follow Yeesha's route to the cavern, so now we link them to Relto
+                                    ageInfo.setAgeFilename("Personal")
+                                    ageLink.setAgeInfo(ageInfo)
+                                    ageLink.setLinkingRules(PtLinkingRules.kOwnedBook)
+                                    linkmgr.linkToAge(ageLink)
+                                elif type (crsEntry) != type (None):
+                                    # they're a CRS Explorer and have taken the full path to D'ni
+                                    ageInfo.setAgeFilename("DniHouse")
+                                    ageLink.setAgeInfo(ageInfo)
+                                    ageLink.setLinkingRules(PtLinkingRules.kOwnedBook)
+                                    linkmgr.linkToAge(ageLink)
+                                else:
+                                    # they haven't made a choice yet, they have to go back to DIRTDescent and choose
+                                    ageInfo.setAgeFilename("DirtDescent")
+                                    ageInfo.setAgeInstanceName(kDIRTDescentInstanceName)
+                                    ageInfo.setAgeInstanceGuid(kDIRTDescentGUID)
+                                    ageLink.setAgeInfo(ageInfo)
+                                    ageLink.setLinkingRules(PtLinkingRules.kBasicLink)
+                                    linkmgr.linkToAge(ageLink)
+
+                            else:
+                                # we'll save the clothing
+                                avatar.avatar.saveClothingToFile(str(PtGetLocalPlayer().getPlayerID()) + ".clo")
                                 # this was their first time... go to the cleft
-                            #~    ageLink = ptAgeLinkStruct()
-                            #~    ageInfo = ageLink.getAgeInfo()
-                            #~    temp = ptAgeInfoStruct()
-                            #~    temp.copyFrom(ageInfo)
-                            #~    ageInfo = temp
-                            #~    if PtIsDemoMode():
-                            #~        ageInfo.setAgeFilename("Demo")
-                            #~    else:
-                            #~        ageInfo.setAgeFilename("Cleft")
-                            #~    ageInfo.setAgeInstanceName("D'ni-Riltagamin")
-                            #~    ageLink.setAgeInfo(ageInfo)
-                            #~    ageLink.setLinkingRules(PtLinkingRules.kOriginalBook)
-                            #~    linkmgr = ptNetLinkingMgr()
-                            #~    linkmgr.linkToAge(ageLink)
-                            
+                                ageLink = ptAgeLinkStruct()
+                                ageInfo = ageLink.getAgeInfo()
+                                temp = ptAgeInfoStruct()
+                                temp.copyFrom(ageInfo)
+                                ageInfo = temp
+                                ageInfo.setAgeFilename("DirtDescent")
+                                ageInfo.setAgeInstanceName(kDIRTDescentInstanceName)
+                                ageInfo.setAgeInstanceGuid(kDIRTDescentGUID)
+                                ageLink.setAgeInfo(ageInfo)
+                                ageLink.setLinkingRules(PtLinkingRules.kBasicLink)
+                                linkmgr = ptNetLinkingMgr()
+                                linkmgr.linkToAge(ageLink)
+
                     elif btnID == kQuitBtnID:
                         avatar = PtGetLocalAvatar()
                         # save any seasonal clothing being worn to the closet
@@ -1210,6 +1222,8 @@ class xAvatarCustomization(ptModifier):
                 avatar.avatar.addWardrobeClothingItem(item.name,ptColor().white(),ptColor().white())
     
     def ILinkToCloset(self):
+        avatar = PtGetLocalAvatar()
+        vault = ptVault()
         linkmgr = ptNetLinkingMgr()
         ageLink = ptAgeLinkStruct()
         
@@ -1217,11 +1231,18 @@ class xAvatarCustomization(ptModifier):
         temp = ptAgeInfoStruct()
         temp.copyFrom(ageInfo)
         ageInfo = temp
-        ageInfo.setAgeFilename("Personal")
-        
-        spawnPoint = ageLink.getSpawnPoint()
-        spawnPoint.setName("LinkInPointCloset")
-        
+        crsEntry = vault.findChronicleEntry(kCRSExplorer)
+        # first lets save the clothing:
+        avatar.avatar.saveClothingToFile(str(PtGetLocalPlayer().getPlayerID()) + ".clo")
+        #then we link to one of the closets
+        if type(crsEntry) != type(None):
+            ageInfo.setAgeFilename("DniHouse")
+            spawnPoint = ageLink.getSpawnPoint()
+            spawnPoint.setName("LinkInPointCloset")
+        else:
+            ageInfo.setAgeFilename("Personal")
+            spawnPoint = ageLink.getSpawnPoint()
+            spawnPoint.setName("LinkInPointCloset")
         ageLink.setAgeInfo(ageInfo)
         ageLink.setSpawnPoint(spawnPoint)
         ageLink.setLinkingRules(PtLinkingRules.kOwnedBook)
