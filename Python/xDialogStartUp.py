@@ -180,6 +180,8 @@ WebLaunchCmd = None
 # These variables should be changed based on your setup and how you configure your server to setup the DirtDescent age.
 kDIRTDescentInstanceName = "D'ni-Tiwah"
 kDIRTDescentGUID = "8468404b-6880-4e7a-b3f2-b1b8e1077263"
+kCRSExplorer = "CRSExplorer"
+kCleftSolved = "CleftSolved"
 #====================================
 
 class xDialogStartUp(ptResponder):
@@ -567,8 +569,8 @@ class xDialogStartUp(ptResponder):
             vault = ptVault()
             entry = vault.findChronicleEntry("InitialAvCustomizationsDone")
             if type(entry) != type(None):
-                crsEntry = vault.findChronicleEntry("CRSExplorer")
-                clftSolved = vault.findChronicleEntry("CleftSolved")
+                crsEntry = vault.findChronicleEntry(kCRSExplorer)
+                clftSolved = vault.findChronicleEntry(kCleftSolved)
                 if type(crsEntry) != type(None):
                     ageInfo.setAgeFilename("DniHouse")
                     self.ageLink.setLinkingRules(PtLinkingRules.kOwnedBook)
