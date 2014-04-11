@@ -431,6 +431,7 @@ class xLinkingBookGUIPopup(ptModifier):
         global kGrsnTeamBook
         global pelletCaveGUID
         showOpen = 0
+        thisAge = PtGetAgeName()
         #If this is a normal pedestal book, the panel is defined in the Max GUI. If this is the personal Age Bookshelf, the panel is passed in a note from psnlBookshelf. Determine the source here.
         if len(actBookshelf.value) == 0:
             agePanel = TargetAge.value
@@ -445,9 +446,13 @@ class xLinkingBookGUIPopup(ptModifier):
             #if so it sets (or creates and sets, if not already present) a Tomahna chronicle entry to yes,
             #which is then read in by Cleft.py to load in the Tomahna pages
             if agePanel == "Cleft":
-                vault = ptVault()
-                if not vault.amOwnerOfCurrentAge():
-                    agePanel = "DisabledDesert"
+                # We have to be able to link to the Cleft from DirtDescent
+                # so we make it disabled for non-owners everywhere but DirtDescent.
+                if thisAge != "DirtDescent":
+                    print "this age is - ",thisAge
+                    vault = ptVault()
+                    if not vault.amOwnerOfCurrentAge():
+                        agePanel = "DisabledDesert"
             elif agePanel == "TomahnaFromCleft":
                 vault = ptVault()
                 entry = vault.findChronicleEntry("TomahnaLoad")
@@ -475,14 +480,31 @@ class xLinkingBookGUIPopup(ptModifier):
                 params = xLinkingBookDefs.xAgeLinkingBooks[agePanel]
                 if len(params) == 6:
                     sharable,width,height,stampdef,bookdef,gui = params
-                elif len(params) == 5:
+                elif len(params) == 5 and thisAge != "DirtDescent":
                     sharable,width,height,stampdef,bookdef = params
                     gui = "BkBook"
                 else:
-                    # this is a treasure book
-                    linkingPanel = params
-                    self.IShowBahroBook(linkingPanel)
-                    return
+                    # The Cleft's linking panel is tradionally a book and not a bahro stone, but
+                    # we need to make it a stone, but we don't want to mess with the Cleft book
+                    # anywhere else in the game, so we need to add some code here that controls
+                    # what gets shown and where.
+                    if thisAge == "DirtDescent":
+                        if agePanel == "Cleft":
+                            linkingPanel = ( 'xLinkPanelCleftDesert' )
+                            # We show a bahro stone
+                            self.IShowBahroBook(linkingPanel)
+                            return
+                        # we show a book for every other panel in DirtDescent
+                        else:
+                            sharable,width,height,stampdef,bookdef = params
+                            gui = "BkBook"
+                    # now we can  just show bahro stones for any book whose params are not
+                    # clearly defined in xLinkingBookDefs.
+                    else:
+                        # this is a treasure book
+                        linkingPanel = params
+                        self.IShowBahroBook(linkingPanel)
+                        return
                 if not IsDRCStamped.value:
                     stampdef = xLinkingBookDefs.NoDRCStamp
                 if sharable:
@@ -539,8 +561,10 @@ class xLinkingBookGUIPopup(ptModifier):
                     agePanel = "CleftWithTomahna"
 
             # build the SpawnPointName/Title lists
-            
-            if ((agePanel == "Cleft") or (agePanel == "CleftWithTomahna")) and not ptVault().amOwnerOfCurrentAge():
+            thisAge = PtGetAgeName()
+            # We have to add DirtDescent to the list of ages that can show the Cleft and not have
+            # it be disabled if you're not the owner of the age.
+            if ((agePanel == "Cleft") or (agePanel == "CleftWithTomahna")) and not ptVault().amOwnerOfCurrentAge() and (thisAge != "DirtDescent"):
                 PtDebugPrint("xLinkingBookGUI.IShowBookTreasure(): You're a visitor trying to use the owner's Cleft book. You get the void.")
                 SpawnPointTitle_Dict = {xLinkingBookDefs.kFirstLinkPanelID: 'DisabledDesert'}
                 SpawnPointName_Dict = {xLinkingBookDefs.kFirstLinkPanelID: 'DisabledDesert'}
