@@ -291,6 +291,7 @@ class kGUI:
     miniChatScrollDown = 52
     miniPlayerListUp = 53
     miniPlayerListDown = 54
+    miniChatDrag = 56
 
     mini7Indicator1 = 71
     mini7Indicator2 = 72
