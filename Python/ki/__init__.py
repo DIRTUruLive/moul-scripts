@@ -6449,6 +6449,8 @@ class xKI(ptModifier):
             ynID = control.getTagID()
             if self.YNWhatReason == kGUI.YNQuit:
                 if ynID == kGUI.YesButtonID:
+                    avatar = PtGetLocalAvatar()
+                    avatar.avatar.saveClothingToFile(str(PtGetLocalPlayer().getPlayerID()) + ".clo")
                     PtConsole("App.Quit")
                 elif ynID == kGUI.NoButtonID:
                     KIYesNo.dialog.hide()
@@ -6457,6 +6459,8 @@ class xKI(ptModifier):
                     logoutButton = ptGUIControlButton(KIYesNo.dialog.getControlFromTag(kGUI.YesNoLogoutButtonID))
                     logoutButton.hide()
                 elif ynID == kGUI.YesNoLogoutButtonID:
+                    avatar = PtGetLocalAvatar()
+                    avatar.avatar.saveClothingToFile(str(PtGetLocalPlayer().getPlayerID()) + ".clo")
                     KIYesNo.dialog.hide()
                     logoutText = ptGUIControlTextBox(KIYesNo.dialog.getControlFromTag(kGUI.YesNoLogoutTextID))
                     logoutText.hide()
